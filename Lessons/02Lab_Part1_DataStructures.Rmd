@@ -39,10 +39,10 @@ vector1 <- c(1,2,5.3,6,-2,4) # Vector type: Numeric
 vector1
 class(vector1)
 
-vector2 <- c("one","two","three") # Vector type: 
+vector2 <- c("one","two","three") # Vector type: Characters
 vector2
 
-vector3 <- c(TRUE,TRUE,TRUE,FALSE,TRUE,FALSE) # Vector type:
+vector3 <- c(TRUE,TRUE,TRUE,FALSE,TRUE,FALSE) # Vector type:Logic elements
 vector3
 ```
 
@@ -53,25 +53,25 @@ Add comments below to indicate what each operation does.(First answer is provide
 # Returns the 3rd item in the vector
 vector1[3]
 
-#
+# Returns maximum number in vector
 max(vector1)
 
 #Create another vector of the values 10 thru 15
 vector4 <- c(10:15)
 
-#
+# Combines items in vector1 and vector4
 c(vector1, vector4)
 
-#
+# Multiplies the items one by one in both vectors
 vector1 * vector4
 
-#
+# Multiplies all items in vector1 by 10
 vector1 * 10
 
-#
+# Converts items in vector2 to all uppercase
 toupper(vector2) 
 
-#
+# Returns the opposite of items in vector3
 !vector3
 
 ```
@@ -83,16 +83,16 @@ Find a 5-day forecast of temperatures (Fahrenheit) for Durham, North Carolina. C
 ```{r Vector Exercise}
 
 #Assign to the variable 'temps_F' a vector of high temperatures in F
-
+vector5 <- c(80, 82, 80, 75, 76)
 
 #What is the average of these temperatures 
-
+mean(vector5)
 
 #Compute the difference between each temperature and the average calculated above
-
+vector5 - mean(vector5)
 
 #Subtract 32 and multiply by 5/9ths to create a vector in Celsius
-
+temps_c <-(vector5 - 32)*5/9
 
 ```
 
@@ -119,7 +119,7 @@ matrix3 <- matrix(
     c("un", "deux", "trois", "quatre")
     )
   ) 
-
+matrix3
 ```
 
 ### Matrix Operations
@@ -163,7 +163,7 @@ matrix4['R2','C1']
 ### Exercise 1b: Matrices
 Compute the mean of column "C2" in matrix4. (Should be 14.5)
 ```{r Matrix Exercise}
-
+mean(matrix4[, 'C2'])
 ```
 
 
@@ -179,8 +179,7 @@ list1 <- list(
   mymatrix = matrix1, 
   age = 5.3)
 
-```
-
+  
 
 ### List Operations
 ```{r List Operations}
@@ -222,7 +221,7 @@ names(dataframe1) <- c("ID","Color","Passed"); View(dataframe1) #
 
 #Add a new column to the dataframe
 dataframe1$month <- c('Jan','Feb', 'Mar', 'Apr')
-
+dataframe1$month
 ```
 
 
