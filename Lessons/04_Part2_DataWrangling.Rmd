@@ -19,8 +19,14 @@ getwd()
 #library(plyr)
 library(tidyverse)
 library(lubridate)
-NTL.phys.data.PeterPaul <- read.csv("./Data/Processed/NTL-LTER_Lake_ChemistryPhysics_PeterPaul_Processed.csv")
-NTL.nutrient.data <- read.csv("./Data/Raw/NTL-LTER_Lake_Nutrients_Raw.csv",stringsAsFactors = TRUE)
+NTL.phys.data.PeterPaul <- read.csv(
+  file="./Data/Processed/NTL-LTER_Lake_ChemistryPhysics_PeterPaul_Processed.csv"
+  )
+NTL.nutrient.data <- read.csv(
+ file= "./Data/Raw/NTL-LTER_Lake_Nutrients_Raw.csv",
+  stringsAsFactors = TRUE
+  )
+
 ```
 
 ## Review of basic exploration and wrangling
@@ -177,7 +183,8 @@ write.csv(LitterTrap, row.names = FALSE,
 
 dplyr functionality, combined with the pipes operator, allows us to split datasets according to groupings (function: `group_by`), then run operations on those groupings and return the output of those operations. There is a lot of flexibility in this approach, but we will illustrate just one example today.
 
-```{r split-apply-combine}
+```{r split-apply-combine} 
+#to debug pipe: run everything above current code chunk. run everything before pipe. keep going pipe by pipe. 
 NTL.PeterPaul.summaries <- 
   NTL.phys.nutrient.data.PeterPaul %>%
   filter(depth == 0) %>%
