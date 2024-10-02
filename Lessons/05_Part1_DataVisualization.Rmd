@@ -90,6 +90,10 @@ O3plot2 <- ggplot(EPAair) +
   geom_point(aes(x = Date, y = Ozone, color = "blue"))
 print(O3plot2)
 
+O3plot2 <- ggplot(EPAair) +
+  geom_point(aes(x = Date, y = Ozone), color = "blue")
+print(O3plot2)
+
 # Add additional variables
 # How could you automatically assign a marker color to a variable? 
 PMplot <- 
