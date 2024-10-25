@@ -1,0 +1,206 @@
+---
+title: "Assignment 7: GLMs (Linear Regressios, ANOVA, & t-tests)"
+author: "Summer Heschong"
+date: "Fall 2024"
+output: pdf_document
+geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
+---
+
+## OVERVIEW
+
+This exercise accompanies the lessons in Environmental Data Analytics on generalized linear models. 
+
+## Directions
+1. Rename this file `<FirstLast>_A07_GLMs.Rmd` (replacing `<FirstLast>` with your first and last name).
+2. Change "Student Name" on line 3 (above) with your name.
+3. Work through the steps, **creating code and output** that fulfill each instruction.
+4. Be sure to **answer the questions** in this assignment document.
+5. When you have completed the assignment, **Knit** the text and code into a single PDF file.
+
+
+## Set up your session 
+1. Set up your session. Check your working directory. Load the tidyverse, agricolae and other needed packages. Import the *raw* NTL-LTER raw data file for chemistry/physics (`NTL-LTER_Lake_ChemistryPhysics_Raw.csv`). Set date columns to date objects.
+
+2. Build a ggplot theme and set it as your default theme.
+
+```{r setup2, echo=TRUE, results='hide'}
+#1
+library(tidyverse)
+library(agricolae)
+library(here)
+
+NTL.Chem.Phys <- read.csv(here('Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv'), stringsAsFactors = TRUE)
+
+NTL.Chem.Phys$sampledate <- as.Date(NTL.Chem.Phys$sampledate, format = '%m/%d/%y')
+
+#2
+mytheme <- theme_classic(base_size = 14) +
+  theme(axis.text = element_text(color = "blue"), 
+        legend.position = "top")
+theme_set(mytheme)
+
+
+```
+
+## Simple regression
+Our first research question is: Does mean lake temperature recorded during July change with depth across all lakes?
+
+3. State the null and alternative hypotheses for this question:
+> Answer:
+H0: Mean lake temperature recorded during July does not change with depth across all lakes.
+Ha: Mean lake temperature recorded during July changes with depth across all lakes. 
+
+
+4.  Wrangle your NTL-LTER dataset with a pipe function so that the records meet the following criteria: 
+ * Only dates in July. 
+ * Only the columns: `lakename`, `year4`, `daynum`, `depth`, `temperature_C`
+ * Only complete cases (i.e., remove NAs)
+
+5. Visualize the relationship among the two continuous variables with a scatter plot of temperature by depth. Add a smoothed line showing the linear model, and limit temperature values from 0 to 35 °C. Make this plot look pretty and easy to read.
+
+```{r scatterplot}
+#4
+NTL.Chem.Phys.wrangled <- 
+  NTL.Chem.Phys %>%
+  mutate(Month=month(sampledate)) %>%
+  filter(Month==7) %>%
+  select(lakename, year4, daynum, depth, temperature_C) %>%
+  na.omit(NTL.Chem.Phys.wrangled) %>%
+  filter(temperature_C>=0 | temperature_C<=35)
+
+#5
+NTL.Chem.Phys.scatter <- 
+  NTL.Chem.Phys.wrangled %>%
+  ggplot(aes(y=depth, x=temperature_C)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  scale_y_reverse()
+NTL.Chem.Phys.scatter
+```
+
+
+6. Interpret the figure. What does it suggest with regards to the response of temperature to depth? Do the distribution of points suggest about anything about the linearity of this trend?
+
+> Answer: It suggests that temperature decreases as depth increases. 
+
+
+7. Perform a linear regression to test the relationship and display the results.
+
+```{r linear.regression}
+#7
+temperature.regression <-
+  lm(NTL.Chem.Phys.wrangled$temperature_C ~
+       NTL.Chem.Phys.wrangled$depth)
+summary(temperature.regression)
+
+```
+
+
+8. Interpret your model results in words. Include how much of the variability in temperature is explained by changes in depth, the degrees of freedom on which this finding is based, and the statistical significance of the result. Also mention how much temperature is predicted to change for every 1m change in depth. 
+
+> Answer:69.43% of the variablility in temperature is explained by changes in depth. It's based on 9501 degrees of freedom. The results are statisticaly significant. Temperature is predicted to decrease by 1.62 degrees Celsius for every 1m change in depth. 
+
+
+---
+
+## Multiple regression
+Let's tackle a similar question from a different approach. Here, we want to explore what might the best set of predictors for lake temperature in July across the monitoring period at the North Temperate Lakes LTER. 
+
+
+9. Run an AIC to determine what set of explanatory variables (year4, daynum, depth) is best suited to predict temperature.
+
+10. Run a multiple regression on the recommended set of variables. 
+
+```{r temperature.model}
+#9
+NTL.Chem.Phys.2 <-
+  NTL.Chem.Phys %>%
+  mutate(Month=month(sampledate)) %>%
+  filter(Month==7)
+NTL.Chem.Phys.AIC<-
+  lm(data= NTL.Chem.Phys.2, temperature_C ~ year4 + daynum + depth)
+summary(NTL.Chem.Phys.AIC)
+
+
+#10
+temperature.resgression.2 <- 
+  lm(data=NTL.Chem.Phys.2, temperature_C ~ daynum + depth)
+summary(temperature.resgression.2)
+
+```
+
+11. What is the final set of explanatory variables that the AIC method suggests we use to predict temperature in our multiple regression? How much of the observed variance does this model explain? Is this an improvement over the model using only depth as the explanatory variable?
+
+> Answer: The final set of explanatory variable that the AIC method suggests we use are 'daynum' and 'depth'. 84.1% of the observed variance is explained by this model. Yes, it is an improvement. 
+
+
+
+---
+## Analysis of Variance
+
+12. Now we want to see whether the different lakes have, on average, different temperatures in the month of July. Run an ANOVA test to complete this analysis. (No need to test assumptions of normality or similar variances.) Create two sets of models: one expressed as an ANOVA models and another expressed as a linear model (as done in our lessons).
+
+```{r anova.model}
+#12
+NTL.Chem.Phys.aov <- aov(data=NTL.Chem.Phys.2, temperature_C ~ lakename)
+summary(NTL.Chem.Phys.aov)
+
+NTL.Chem.Phys.lm <- lm(data=NTL.Chem.Phys.2, temperature_C ~ lakename)
+summary(NTL.Chem.Phys.lm)
+
+```
+
+13. Is there a significant difference in mean temperature among the lakes? Report your findings. 
+
+> Answer: No there is not a significant difference. 
+
+
+
+14. Create a graph that depicts temperature by depth, with a separate color for each lake. Add a geom_smooth (method = "lm", se = FALSE) for each lake. Make your points 50 % transparent. Adjust your y axis limits to go from 0 to 35 degrees. Clean up your graph to make it pretty. 
+
+```{r scatterplot.2, warning=FALSE}
+#14.
+ggplot(NTL.Chem.Phys.2, aes(x = depth, y = temperature_C, color = lakename)) +
+  geom_point(alpha = 0.5, size = 2) +  
+  geom_smooth(method = "lm", se = FALSE) + 
+  scale_y_continuous(limits = c(0, 35)) +  
+  labs(title = "Temperature vs. Depth by Lake",
+       x = "Depth (m)",
+       y = "Temperature (°C)", 
+       color = "Lake Name") 
+
+```
+
+15. Use the Tukey's HSD test to determine which lakes have different means.
+
+```{r tukey.test}
+#15
+TukeyHSD(NTL.Chem.Phys.aov)
+
+```
+
+16.From the findings above, which lakes have the same mean temperature, statistically speaking, as Peter Lake? Does any lake have a mean temperature that is statistically distinct from all the other lakes?
+
+>Answer:Paul Lake and Ward Lake have the same mean temperature as Peter Lake. Central Long Lake has a mean temperature that is statistically distinct form all the other lakes. 
+
+ 
+
+17. If we were just looking at Peter Lake and Paul Lake. What's another test we might explore to see whether they have distinct mean temperatures? 
+
+>Answer: The HSD test. 
+
+
+
+18. Wrangle the July data to include only records for Crampton Lake and Ward Lake. Run the two-sample T-test on these data to determine whether their July temperature are same or different. What does the test say? Are the mean temperatures for the lakes equal? Does that match you answer for part 16?
+
+```{r t.test}
+Crampton_Ward_Lakes <-
+  NTL.Chem.Phys.2 %>%
+  filter(lakename=='Crampton Lake' | lakename=='Ward Lake')
+
+t.test(Crampton_Ward_Lakes$temperature_C ~ Crampton_Ward_Lakes$lakename)
+```
+
+>Answer: Their July mean temperatures are statistically equal. It does match my answer for part 16. 
