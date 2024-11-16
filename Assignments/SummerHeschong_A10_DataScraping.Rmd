@@ -90,7 +90,7 @@ Max_day_use <- website %>%
 5. Create a line plot of the maximum daily withdrawals across the months for 2023, making sure, the months are presented in proper sequence.
 
 ```{r create.a.dataframe.from.scraped.data}
-#4 
+#4 create data frame
 water_supply_data <- data.frame(
   'Month' = as.factor(rep(1:12)),
   'Year' = rep(2023, 12),
@@ -99,12 +99,14 @@ water_supply_data <- data.frame(
   'Ownership' = Ownership,
   'Maximum Day Use MGD'= as.numeric(Max_day_use))
 
+#make a column for Date
 water_supply_data$Date <- make_date(
     month = water_supply_data$Month, year = water_supply_data$Year) 
-  
+
+#change Date to a date object  
 water_supply_data$Date <- format(water_supply_data$Date, "%Y-%m")
 
-#5 
+#5 Create line plot
 
 ggplot(water_supply_data, aes(x= Month, y= Maximum.Day.Use.MGD, group = 1)) +
   geom_line()
@@ -116,10 +118,10 @@ ggplot(water_supply_data, aes(x= Month, y= Maximum.Day.Use.MGD, group = 1)) +
 
 ```{r construct.a.scraping.function}
 #6. 
-scrape_ncwater <- function(Year, PWSID){
+scrape_ncwater <- function(the_year, PWSID){
  
    website <- read_html(
-    paste0('https://www.ncwater.org/WUDC/app/LWSP/report.php?',PWSID,'/',Year))
+    paste0('https://www.ncwater.org/WUDC/app/LWSP/report.php?',PWSID,'/',the_year))
   
   water_system_name_tag <- 'div+ table tr:nth-child(1) td:nth-child(2)'
   PWSID_tag <-'td tr:nth-child(1) td:nth-child(5)'
@@ -140,15 +142,15 @@ Max_day_use <- website %>%
   html_text()
 
 water_supply_data <- data.frame(
-  'Month' = as.factor(rep(1:12)),
-  'Year' = (rep(Year, 12)),
-  'Water System Name' = water_system_name,
+  'Month' = as.factor(1:12),
+  'Year' = rep(the_year, 12),
+  'Water System Name' = water_system_name, 
   'PWSID' = PWSID,
   'Ownership' = Ownership,
   'Maximum Day Use MGD'= as.numeric(Max_day_use))%>%
- mutate(Date = my(paste(Month,'-', Year)))
+  mutate(Date = as.Date(paste(Year, Month, "01", sep = "-")))
+  
 
-         
 Sys.sleep(5)
 
 return(water_supply_data)
@@ -163,14 +165,21 @@ return(water_supply_data)
 #7 
 MDW_Durham_2015 <- scrape_ncwater(2015, '03-32-010')
 
+ggplot(water_supply_data, aes(x= Month, y= Maximum.Day.Use.MGD, group = 1)) +
+  geom_line()
+
 ```
 
 8. Use the function above to extract data for Asheville (PWSID = 01-11-010) in 2015. Combine this data with the Durham data collected above and create a plot that compares Asheville's to Durham's water withdrawals.
 
 ```{r fetch.and.plot.Asheville.2015.data}
 #8 
+MDW_Asheville_2015 <- scrape_ncwater(2015, '01-11-010')
 
+MDW_AshandDurham_2015  <- rbind(MDW_Asheville_2015, MDW_Durham_2015)
 
+ggplot(MDW_AshandDurham_2015, aes(x = Month, y= Maximum.Day.Use.MGD, group= 1, color = Water.System.Name)) +
+  geomline()
 ```
 
 
@@ -180,7 +189,16 @@ MDW_Durham_2015 <- scrape_ncwater(2015, '03-32-010')
 
 ```{r fetch.and.plot.Asheville.multiyear.data }
 #9 
+years <- rep(2018, 2022)
+PWSID <- rep.int('01-11-010',length(years)) 
 
+MDW_Asheville_18thru22 <- map2(years, PWSID, scrape_ncwater)%>%
+  bind_rows(MDW_Asheville_18thru22s)
+
+ggplot(MDW_Asheville_18thru22,
+       aes(x = Month, y = Maximum.Day.Use.MGD, group=1)) +
+  geom_line() +
+   geom_smooth(method="loess",se=FALSE)
 
 ```
 
