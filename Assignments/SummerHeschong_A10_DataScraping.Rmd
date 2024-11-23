@@ -121,7 +121,7 @@ ggplot(water_supply_data, aes(x= Month, y= Maximum.Day.Use.MGD, group = 1)) +
 scrape_ncwater <- function(the_year, PWSID){
  
    website <- read_html(
-    paste0('https://www.ncwater.org/WUDC/app/LWSP/report.php?',PWSID,'/',the_year))
+    paste0( 'https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=',PWSID,'&year=',the_year))
   
   water_system_name_tag <- 'div+ table tr:nth-child(1) td:nth-child(2)'
   PWSID_tag <-'td tr:nth-child(1) td:nth-child(5)'
@@ -148,9 +148,8 @@ water_supply_data <- data.frame(
   'PWSID' = PWSID,
   'Ownership' = Ownership,
   'Maximum Day Use MGD'= as.numeric(Max_day_use))%>%
-  mutate(Date = as.Date(paste(Year, Month, "01", sep = "-")))
+  mutate(Date = my(paste(Month,"-",Year)))
   
-
 Sys.sleep(5)
 
 return(water_supply_data)
@@ -178,8 +177,8 @@ MDW_Asheville_2015 <- scrape_ncwater(2015, '01-11-010')
 
 MDW_AshandDurham_2015  <- rbind(MDW_Asheville_2015, MDW_Durham_2015)
 
-ggplot(MDW_AshandDurham_2015, aes(x = Month, y= Maximum.Day.Use.MGD, group= 1, color = Water.System.Name)) +
-  geomline()
+ggplot(MDW_AshandDurham_2015, aes(x = Month, y= Maximum.Day.Use.MGD, color = Water.System.Name, group= Water.System.Name)) +
+  geom_line()
 ```
 
 
@@ -189,19 +188,20 @@ ggplot(MDW_AshandDurham_2015, aes(x = Month, y= Maximum.Day.Use.MGD, group= 1, c
 
 ```{r fetch.and.plot.Asheville.multiyear.data }
 #9 
-years <- rep(2018, 2022)
+years <- rep(2018:2022)
 PWSID <- rep.int('01-11-010',length(years)) 
 
-MDW_Asheville_18thru22 <- map2(years, PWSID, scrape_ncwater)%>%
-  bind_rows(MDW_Asheville_18thru22s)
+MDW_Asheville_18thru22 <- map2(years, PWSID, scrape_ncwater) #I separated these two lines because when I used a pipe I was getting an error that MDW_Asheville_18thru22 didn't exist.
+
+MDW_Asheville_18thru22 <- bind_rows(MDW_Asheville_18thru22)
 
 ggplot(MDW_Asheville_18thru22,
-       aes(x = Month, y = Maximum.Day.Use.MGD, group=1)) +
+       aes(x = Date, y = Maximum.Day.Use.MGD)) +
   geom_line() +
    geom_smooth(method="loess",se=FALSE)
 
 ```
 
 Question: Just by looking at the plot (i.e. not running statistics), does Asheville have a trend in water usage over time?
-> Answer:
+> Answer:It's hard to tell for this short of a time span, but it seems to be increasing gradually. 
 >
